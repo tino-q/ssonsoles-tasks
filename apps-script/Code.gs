@@ -170,15 +170,9 @@ function createResponse(data, status = 200) {
     timestamp: new Date().toISOString(),
   };
 
-  return ContentService.createTextOutput(JSON.stringify(response))
-    .setMimeType(ContentService.MimeType.JSON)
-    .setHeaders({
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-      "Access-Control-Allow-Headers":
-        "Content-Type,Authorization,X-Requested-With",
-      "Access-Control-Max-Age": "86400",
-    });
+  return ContentService.createTextOutput(JSON.stringify(response)).setMimeType(
+    ContentService.MimeType.JSON
+  );
 }
 
 // Helper function to get spreadsheet
