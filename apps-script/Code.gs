@@ -16,17 +16,26 @@ function doGet(e) {
       case "getProducts":
         return createResponse(ProductService.getProducts());
       default:
-        return createResponse({ error: "Invalid action" }, 400);
+        return createResponse(
+          {
+            error:
+              "Invalid action. Supported actions: getTasks, getCleaners, getProducts",
+          },
+          400
+        );
     }
   } catch (error) {
     console.error("doGet error:", error);
-    return createResponse({ error: error.toString() }, 500);
+    return createResponse(
+      { error: "Internal server error: " + error.message },
+      500
+    );
   }
 }
 
-// Handle preflight OPTIONS requests for CORS
+// Handle preflight OPTIONS requests for CORS - simplified approach
 function doOptions(e) {
-  return createResponse({}, 200);
+  return ContentService.createTextOutput("");
 }
 
 function doPost(e) {
@@ -43,10 +52,10 @@ function doPost(e) {
       data = formData;
     } catch (error) {
       console.error("Failed to parse form data:", error);
-      return createResponse({ error: "Invalid form data" }, 400);
+      return createResponse({ error: "Invalid form data format" }, 400);
     }
   } else {
-    return createResponse({ error: "No data provided" }, 400);
+    return createResponse({ error: "No data provided in request" }, 400);
   }
 
   const action = e.parameter.action;
@@ -58,14 +67,32 @@ function doPost(e) {
       case "updateTask":
         return createResponse(TaskService.updateTask(data));
       case "assignTask":
+        if (!data.taskId || !data.cleanerId) {
+          return createResponse(
+            { error: "Missing required fields: taskId and cleanerId" },
+            400
+          );
+        }
         return createResponse(
           TaskService.assignTask(data.taskId, data.cleanerId)
         );
       case "updateTaskStatus":
+        if (!data.taskId || !data.status) {
+          return createResponse(
+            { error: "Missing required fields: taskId and status" },
+            400
+          );
+        }
         return createResponse(
           TaskService.updateTaskStatus(data.taskId, data.status, data.comments)
         );
       case "requestProducts":
+        if (!data.taskId || !data.productRequests) {
+          return createResponse(
+            { error: "Missing required fields: taskId and productRequests" },
+            400
+          );
+        }
         return createResponse(
           ProductService.requestProducts(data.taskId, data.productRequests)
         );
@@ -76,11 +103,20 @@ function doPost(e) {
           ReportService.getMonthlyReport(data.month, data.year, data.cleanerId)
         );
       default:
-        return createResponse({ error: "Invalid action" }, 400);
+        return createResponse(
+          {
+            error:
+              "Invalid action. Supported actions: createTask, updateTask, assignTask, updateTaskStatus, requestProducts, importReservations, getMonthlyReport",
+          },
+          400
+        );
     }
   } catch (error) {
     console.error("doPost error:", error);
-    return createResponse({ error: error.toString() }, 500);
+    return createResponse(
+      { error: "Internal server error: " + error.message },
+      500
+    );
   }
 }
 

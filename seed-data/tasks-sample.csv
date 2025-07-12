@@ -1,0 +1,11 @@
+id,property,type,date,status,cleaner,notes,start_time,end_time,comments,start_video,end_video,created_at
+task_1641234567890_abc123,QDCHA,cleaning,2024-01-15,URGENT,,Checkout cleaning. Standard checkout,,,,,,2024-01-14T10:00:00.000Z
+task_1641234567891_def456,PISO2,cleaning,2024-01-16,PENDING,1,Checkout cleaning. Late checkout requested,,,,,,2024-01-15T10:00:00.000Z
+task_1641234567892_ghi789,STUDIO,cleaning,2024-01-17,CONFIRMED,2,Checkout cleaning. Deep clean needed,,,,,,2024-01-16T10:00:00.000Z
+task_1641234567893_jkl012,QDCHA,cleaning,2024-01-20,COMPLETED,1,Checkout cleaning. Early checkin,09:00,12:00,Task completed successfully,,,2024-01-19T10:00:00.000Z
+task_1641234567894_mno345,LOFT,cleaning,2024-01-22,PENDING,3,Checkout cleaning,,,,,,2024-01-21T10:00:00.000Z
+task_1641234567895_pqr678,PISO2,maintenance,2024-01-24,URGENT,,Maintenance required,,,,,,2024-01-23T10:00:00.000Z
+task_1641234567896_stu901,STUDIO,cleaning,2024-01-26,CONFIRMED,2,Checkout cleaning. Check balcony door,,,,,,2024-01-25T10:00:00.000Z
+task_1641234567897_vwx234,QDCHA,cleaning,2024-01-28,PENDING,1,Checkout cleaning,,,,,,2024-01-27T10:00:00.000Z
+task_1641234567898_yz5678,LOFT,cleaning,2024-01-30,URGENT,,Checkout cleaning. Deep clean needed,,,,,,2024-01-29T10:00:00.000Z
+task_1641234567899_abc901,PISO2,cleaning,2024-02-01,CONFIRMED,3,Checkout cleaning,,,,,,2024-01-31T10:00:00.000Z 
