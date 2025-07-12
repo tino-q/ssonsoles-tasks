@@ -20,7 +20,7 @@ function App() {
   return (
     <div className="App">
       <header className="app-header">
-        <h1>Cleaning Tasks!</h1>
+        <h1>Cleaning Tasks!!</h1>
         {isLoggedIn && (
           <div className="user-info">
             <span>Welcome, {currentUser?.name}</span>
