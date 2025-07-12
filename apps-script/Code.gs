@@ -37,11 +37,13 @@ function doPost(e) {
     // More than just 'action'
     data = parseFormData(e.parameter);
   } else if (e.postData && e.postData.contents) {
-    // Fallback to JSON for backward compatibility
+    // Handle form data (application/x-www-form-urlencoded)
     try {
-      data = JSON.parse(e.postData.contents);
+      const formData = parseUrlEncoded(e.postData.contents);
+      data = formData;
     } catch (error) {
-      return createResponse({ error: "Invalid JSON" }, 400);
+      console.error("Failed to parse form data:", error);
+      return createResponse({ error: "Invalid form data" }, 400);
     }
   } else {
     return createResponse({ error: "No data provided" }, 400);
@@ -80,6 +82,45 @@ function doPost(e) {
     console.error("doPost error:", error);
     return createResponse({ error: error.toString() }, 500);
   }
+}
+
+// Helper function to parse URL encoded form data
+function parseUrlEncoded(data) {
+  const result = {};
+  const pairs = data.split("&");
+
+  for (const pair of pairs) {
+    const [key, value] = pair.split("=").map(decodeURIComponent);
+    if (key && value !== undefined) {
+      if (key.includes(".")) {
+        // Handle nested objects (e.g., "user.name" -> {user: {name: value}})
+        const keys = key.split(".");
+        let current = result;
+
+        for (let i = 0; i < keys.length - 1; i++) {
+          if (!current[keys[i]]) {
+            current[keys[i]] = {};
+          }
+          current = current[keys[i]];
+        }
+
+        current[keys[keys.length - 1]] = value;
+      } else {
+        // Handle arrays and regular values
+        if (value.startsWith("[") && value.endsWith("]")) {
+          try {
+            result[key] = JSON.parse(value);
+          } catch (e) {
+            result[key] = value;
+          }
+        } else {
+          result[key] = value;
+        }
+      }
+    }
+  }
+
+  return result;
 }
 
 // Helper function to parse form data into nested objects
