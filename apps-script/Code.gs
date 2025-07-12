@@ -172,7 +172,6 @@ function createResponse(data, status = 200) {
 
   return ContentService.createTextOutput(JSON.stringify(response))
     .setMimeType(ContentService.MimeType.JSON)
-    .setStatusCode(status)
     .setHeaders({
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
