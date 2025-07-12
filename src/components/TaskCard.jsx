@@ -9,7 +9,7 @@ function TaskCard({ task, onResponse, onStart }) {
     switch (status) {
       case "URGENT":
         return "#ff4444";
-      case "PENDING":
+      case "ASSIGNED":
         return "#ffaa00";
       case "CONFIRMED":
         return "#00aa00";
@@ -26,8 +26,8 @@ function TaskCard({ task, onResponse, onStart }) {
     switch (status) {
       case "URGENT":
         return "Urgent - Not Assigned";
-      case "PENDING":
-        return "Awaiting Your Response";
+      case "ASSIGNED":
+        return "Assigned - Awaiting Response";
       case "CONFIRMED":
         return "Confirmed";
       case "REJECTED":
@@ -62,7 +62,7 @@ function TaskCard({ task, onResponse, onStart }) {
   };
 
   const canStart = task.status === "CONFIRMED";
-  const needsResponse = task.status === "PENDING";
+  const needsResponse = task.status === "ASSIGNED";
 
   return (
     <div

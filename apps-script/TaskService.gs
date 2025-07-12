@@ -134,7 +134,7 @@ const TaskService = {
     const updateData = {
       id: taskId,
       assigned_cleaner_id: cleanerId,
-      status: "PENDING", // Task moves to PENDING when assigned
+      status: "ASSIGNED", // Task moves to ASSIGNED when assigned
       last_updated_by: assignedBy,
     };
 

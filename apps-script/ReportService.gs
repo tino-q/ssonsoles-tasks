@@ -57,7 +57,7 @@ const ReportService = {
       total_tasks: tasks.length,
       completed_tasks: 0,
       confirmed_tasks: 0,
-      pending_tasks: 0,
+      assigned_tasks: 0,
       rejected_tasks: 0,
       tentative_tasks: 0,
       total_hours: 0,
@@ -76,8 +76,8 @@ const ReportService = {
         case "CONFIRMED":
           stats.confirmed_tasks++;
           break;
-        case "PENDING":
-          stats.pending_tasks++;
+        case "ASSIGNED":
+          stats.assigned_tasks++;
           break;
         case "REJECTED":
           stats.rejected_tasks++;
@@ -223,7 +223,7 @@ const ReportService = {
         total_tasks: filteredTasks.length,
         completed_tasks: filteredTasks.filter((t) => t.status === "COMPLETED")
           .length,
-        pending_tasks: filteredTasks.filter((t) => t.status === "PENDING")
+        assigned_tasks: filteredTasks.filter((t) => t.status === "ASSIGNED")
           .length,
         urgent_tasks: filteredTasks.filter((t) => t.status === "URGENT").length,
         total_hours: 0,

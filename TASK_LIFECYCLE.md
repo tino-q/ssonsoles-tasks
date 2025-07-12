@@ -9,8 +9,7 @@ The task lifecycle follows a well-defined state machine where each task is repre
 State               | Description                                         | Actor Responsible
 ------------------- | --------------------------------------------------- | -----------------
 `CREATED`           | Task has been created but not assigned              | Admin
-`ASSIGNED`          | Task assigned to a cleaner                          | Admin
-`PENDING`           | Waiting for cleaner response                        | Cleaner
+`ASSIGNED`          | Task assigned to a cleaner, awaiting response       | Admin
 `URGENT`            | Task marked as urgent (not assigned or no response) | Admin
 `CONFIRMED`         | Cleaner has accepted the task                       | Cleaner
 `REJECTED`          | Cleaner has rejected the task                       | Cleaner
@@ -53,7 +52,7 @@ CREATE TABLE tasks (
 
     -- Constraints
     CONSTRAINT chk_status CHECK (status IN (
-        'CREATED', 'ASSIGNED', 'PENDING', 'URGENT', 'CONFIRMED', 
+        'CREATED', 'ASSIGNED', 'URGENT', 'CONFIRMED', 
         'REJECTED', 'TENTATIVE', 'STARTED', 'IN_PROGRESS', 
         'COMPLETED', 'REVISION_REQUIRED', 'VERIFIED', 'CLOSED', 'CANCELLED'
     ))
@@ -102,7 +101,7 @@ Action               | From State              | To State            | Fields Up
 -------------------- | ----------------------- | ------------------- | ----------------------------------------------------------------
 **Create Task**      | -                       | `CREATED`           | All initial fields
 **Assign Task**      | `CREATED`, `URGENT`     | `ASSIGNED`          | `assigned_cleaner_id`, `updated_at`, `last_updated_by`
-**Mark Urgent**      | `CREATED`, `PENDING`    | `URGENT`            | `status`, `updated_at`, `last_updated_by`
+**Mark Urgent**      | `CREATED`, `ASSIGNED`   | `URGENT`            | `status`, `updated_at`, `last_updated_by`
 **Reassign Task**    | `REJECTED`, `TENTATIVE` | `ASSIGNED`          | `assigned_cleaner_id`, `status`, `updated_at`, `last_updated_by`
 **Reschedule**       | `TENTATIVE`             | `CONFIRMED`         | `date`, `status`, `updated_at`, `last_updated_by`
 **Verify Task**      | `COMPLETED`             | `VERIFIED`          | `status`, `updated_at`, `last_updated_by`
@@ -114,9 +113,9 @@ Action               | From State              | To State            | Fields Up
 
 Action                  | From State          | To State      | Fields Updated
 ----------------------- | ------------------- | ------------- | -----------------------------------------------------------------------------------------------
-**Accept Task**         | `PENDING`           | `CONFIRMED`   | `status`, `comments`, `updated_at`, `last_updated_by`
-**Reject Task**         | `PENDING`           | `REJECTED`    | `status`, `comments`, `updated_at`, `last_updated_by`
-**Propose Alternative** | `PENDING`           | `TENTATIVE`   | `status`, `comments`, `updated_at`, `last_updated_by`
+**Accept Task**         | `ASSIGNED`          | `CONFIRMED`   | `status`, `comments`, `updated_at`, `last_updated_by`
+**Reject Task**         | `ASSIGNED`          | `REJECTED`    | `status`, `comments`, `updated_at`, `last_updated_by`
+**Propose Alternative** | `ASSIGNED`          | `TENTATIVE`   | `status`, `comments`, `updated_at`, `last_updated_by`
 **Start Task**          | `CONFIRMED`         | `STARTED`     | `status`, `start_time`, `start_video`, `updated_at`, `last_updated_by`
 **Update Progress**     | `STARTED`           | `IN_PROGRESS` | `status`, `updated_at`, `last_updated_by`
 **Complete Task**       | `IN_PROGRESS`       | `COMPLETED`   | `status`, `end_time`, `end_video`, `comments`, `products_used`, `updated_at`, `last_updated_by`
@@ -124,10 +123,9 @@ Action                  | From State          | To State      | Fields Updated
 
 ### System Actions
 
-Action                | From State          | To State  | Fields Updated
---------------------- | ------------------- | --------- | ----------------------
-**Send Notification** | `ASSIGNED`          | `PENDING` | `status`, `updated_at`
-**Escalate Task**     | `PENDING` (timeout) | `URGENT`  | `status`, `updated_at`
+Action            | From State           | To State | Fields Updated
+----------------- | -------------------- | -------- | ----------------------
+**Escalate Task** | `ASSIGNED` (timeout) | `URGENT` | `status`, `updated_at`
 
 ## Sample Queries
 
@@ -140,7 +138,7 @@ SELECT * FROM tasks WHERE id = 'task_1641234567890_abc123';
 -- Get all tasks for a cleaner
 SELECT * FROM tasks 
 WHERE assigned_cleaner_id = '1' 
-  AND status IN ('PENDING', 'CONFIRMED', 'STARTED', 'IN_PROGRESS');
+  AND status IN ('ASSIGNED', 'CONFIRMED', 'STARTED', 'IN_PROGRESS');
 
 -- Get tasks by status
 SELECT * FROM tasks 

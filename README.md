@@ -13,6 +13,7 @@ Event-driven cleaning management system for vacation rental properties using Goo
 ## ✨ Features
 
 ### For Cleaners:
+
 - 📱 Mobile-optimized interface
 - 🔐 Phone-based authentication
 - ✅ Task confirmation/rejection system
@@ -23,6 +24,7 @@ Event-driven cleaning management system for vacation rental properties using Goo
 - 📝 Comments and notes
 
 ### For Admin (Madi):
+
 - 📊 Direct Google Sheets management
 - 📅 Task assignment and tracking
 - 👥 Cleaner management
@@ -60,8 +62,10 @@ npm run build
 
 The app automatically deploys to GitHub Pages when changes are pushed to main branch.
 
-**Live URL:** https://tino-q.github.io/ssonsoles-tasks/
+**Live URL:** <https://tino-q.github.io/ssonsoles-tasks/>
 
 ## 📄 License
 
 MIT License
+
+Status Flow: Admin creates task: CREATED → ASSIGNED Cleaner responds: ASSIGNED → CONFIRMED/REJECTED/TENTATIVE Task execution: CONFIRMED → STARTED → IN_PROGRESS → COMPLETED Admin review: COMPLETED → VERIFIED → CLOSED

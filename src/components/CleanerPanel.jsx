@@ -7,8 +7,8 @@ function CleanerPanel({ currentUser }) {
   const [tasks, setTasks] = useState([]);
   const [activeTask, setActiveTask] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
-  const [filter, setFilter] = useState("pending"); // 'pending', 'completed', 'rejected', 'all'
 
   useEffect(() => {
     if (currentUser) {
@@ -21,6 +21,11 @@ function CleanerPanel({ currentUser }) {
       setLoading(true);
       setError("");
       const response = await api.getTasks({ cleanerId: currentUser.id });
+
+      // Console log the response for debugging
+      console.log("Tasks API Response:", response);
+      console.log("Response data:", response.data);
+      console.log("Response success:", response.success);
 
       // Check if the response is successful and data is an array
       if (response.success && Array.isArray(response.data)) {
@@ -37,6 +42,28 @@ function CleanerPanel({ currentUser }) {
       setTasks([]); // Ensure tasks is always an array
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    try {
+      setRefreshing(true);
+      setError("");
+      const response = await api.getTasks({ cleanerId: currentUser.id });
+
+      if (response.success && Array.isArray(response.data)) {
+        setTasks(response.data);
+      } else {
+        console.error("Invalid tasks response:", response);
+        setError(response.data?.error || "Failed to refresh tasks");
+        setTasks([]);
+      }
+    } catch (error) {
+      console.error("Failed to refresh tasks:", error);
+      setError("Failed to refresh tasks. Please try again.");
+      setTasks([]);
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -59,14 +86,8 @@ function CleanerPanel({ currentUser }) {
     setActiveTask(null);
   };
 
-  // Ensure tasks is always an array before filtering
+  // Ensure tasks is always an array
   const safeTasks = Array.isArray(tasks) ? tasks : [];
-  const filteredTasks = safeTasks.filter((task) => {
-    if (filter === "pending") return task.status === "PENDING";
-    if (filter === "completed") return task.status === "COMPLETED";
-    if (filter === "rejected") return task.status === "REJECTED";
-    return true;
-  });
 
   if (loading) {
     return <div className="loading">Loading your tasks...</div>;
@@ -85,57 +106,37 @@ function CleanerPanel({ currentUser }) {
   return (
     <div className="cleaner-panel">
       <div className="panel-header">
-        <h2>Your Tasks</h2>
+        <div className="header-title">
+          <h2>Your Tasks</h2>
+          <button
+            onClick={handleRefresh}
+            className="refresh-btn"
+            disabled={refreshing}
+            title="Refresh tasks"
+          >
+            {refreshing ? "🔄" : "↻"}
+          </button>
+        </div>
         {error && <div className="error-message">{error}</div>}
         <div className="task-filters">
-          <button
-            onClick={() => setFilter("pending")}
-            className={filter === "pending" ? "active" : ""}
-          >
-            Pending ({safeTasks.filter((t) => t.status === "PENDING").length})
-          </button>
-          <button
-            onClick={() => setFilter("completed")}
-            className={filter === "completed" ? "active" : ""}
-          >
-            Completed (
-            {safeTasks.filter((t) => t.status === "COMPLETED").length})
-          </button>
-          <button
-            onClick={() => setFilter("rejected")}
-            className={filter === "rejected" ? "active" : ""}
-          >
-            Rejected ({safeTasks.filter((t) => t.status === "REJECTED").length})
-          </button>
-          <button
-            onClick={() => setFilter("all")}
-            className={filter === "all" ? "active" : ""}
-          >
-            All ({safeTasks.length})
-          </button>
+          <button className="active">All ({safeTasks.length})</button>
         </div>
       </div>
 
       <div className="tasks-list">
-        {filteredTasks.length === 0 ? (
+        {safeTasks.length === 0 ? (
           <div className="no-tasks">
             {error ? (
               <div>
                 <p>Unable to load tasks.</p>
                 <button onClick={loadTasks}>Try Again</button>
               </div>
-            ) : filter === "pending" ? (
-              "No pending tasks"
-            ) : filter === "completed" ? (
-              "No completed tasks"
-            ) : filter === "rejected" ? (
-              "No rejected tasks"
             ) : (
               "No tasks assigned"
             )}
           </div>
         ) : (
-          filteredTasks.map((task) => (
+          safeTasks.map((task) => (
             <TaskCard
               key={task.id}
               task={task}
