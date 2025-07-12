@@ -1,26 +1,26 @@
-import { useState } from 'react'
-import CleanerPanel from './components/CleanerPanel'
-import LoginForm from './components/LoginForm'
-import './App.css'
+import { useState } from "react";
+import CleanerPanel from "./components/CleanerPanel";
+import LoginForm from "./components/LoginForm";
+import "./App.css";
 
 function App() {
-  const [currentUser, setCurrentUser] = useState(null)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const handleLogin = (cleanerData) => {
-    setCurrentUser(cleanerData)
-    setIsLoggedIn(true)
-  }
+    setCurrentUser(cleanerData);
+    setIsLoggedIn(true);
+  };
 
   const handleLogout = () => {
-    setCurrentUser(null)
-    setIsLoggedIn(false)
-  }
+    setCurrentUser(null);
+    setIsLoggedIn(false);
+  };
 
   return (
     <div className="App">
       <header className="app-header">
-        <h1>Cleaning Tasks</h1>
+        <h1>Cleaning Tasks!</h1>
         {isLoggedIn && (
           <div className="user-info">
             <span>Welcome, {currentUser?.name}</span>
@@ -39,7 +39,7 @@ function App() {
         )}
       </main>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
