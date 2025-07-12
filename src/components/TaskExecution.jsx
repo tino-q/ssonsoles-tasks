@@ -1,73 +1,75 @@
-import { useState, useEffect } from 'react'
-import api from '../services/api'
+import { useState, useEffect } from "react";
+import api from "../services/api";
 
-function TaskExecution({ task, currentUser, onComplete, onBack }) {
-  const [phase, setPhase] = useState('start') // 'start', 'in-progress', 'end'
-  const [startTime, setStartTime] = useState(null)
-  const [endTime, setEndTime] = useState(null)
-  const [startVideo, setStartVideo] = useState(null)
-  const [endVideo, setEndVideo] = useState(null)
-  const [comments, setComments] = useState('')
-  const [duration, setDuration] = useState('')
-  const [selectedProducts, setSelectedProducts] = useState([])
-  const [products, setProducts] = useState([])
+function TaskExecution({ task, onComplete, onBack }) {
+  const [phase, setPhase] = useState("start"); // 'start', 'in-progress', 'end'
+  const [startTime, setStartTime] = useState(null);
+  const [endTime, setEndTime] = useState(null);
+  const [startVideo, setStartVideo] = useState(null);
+  const [endVideo, setEndVideo] = useState(null);
+  const [comments, setComments] = useState("");
+  const [duration, setDuration] = useState("");
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [products, setProducts] = useState([]);
 
   useEffect(() => {
-    loadProducts()
-  }, [])
+    loadProducts();
+  }, []);
 
   useEffect(() => {
     if (startTime && endTime) {
-      const start = new Date(startTime)
-      const end = new Date(endTime)
-      const diff = (end - start) / 1000 / 60 // minutes
-      setDuration(`${Math.floor(diff / 60)}h ${Math.floor(diff % 60)}m`)
+      const start = new Date(startTime);
+      const end = new Date(endTime);
+      const diff = (end - start) / 1000 / 60; // minutes
+      setDuration(`${Math.floor(diff / 60)}h ${Math.floor(diff % 60)}m`);
     }
-  }, [startTime, endTime])
+  }, [startTime, endTime]);
 
   const loadProducts = async () => {
     try {
-      const productsData = await api.getProducts()
-      setProducts(productsData)
+      const response = await api.getProducts();
+      setProducts(response.data);
     } catch (error) {
-      console.error('Failed to load products:', error)
+      console.error("Failed to load products:", error);
     }
-  }
+  };
 
   const handleStart = () => {
-    const now = new Date().toISOString()
-    setStartTime(now)
-    setPhase('in-progress')
-  }
+    const now = new Date().toISOString();
+    setStartTime(now);
+    setPhase("in-progress");
+  };
 
   const handleEnd = () => {
-    const now = new Date().toISOString()
-    setEndTime(now)
-    setPhase('end')
-  }
+    const now = new Date().toISOString();
+    setEndTime(now);
+    setPhase("end");
+  };
 
   const handleVideoUpload = (e, type) => {
-    const file = e.target.files[0]
+    const file = e.target.files[0];
     if (file) {
       // In a real app, you'd upload to cloud storage
       // For now, we'll just store the file reference
-      const videoUrl = URL.createObjectURL(file)
-      if (type === 'start') {
-        setStartVideo(videoUrl)
+      const videoUrl = URL.createObjectURL(file);
+      if (type === "start") {
+        setStartVideo(videoUrl);
       } else {
-        setEndVideo(videoUrl)
+        setEndVideo(videoUrl);
       }
     }
-  }
+  };
 
   const handleProductToggle = (productId, quantity = 1) => {
-    const existing = selectedProducts.find(p => p.productId === productId)
+    const existing = selectedProducts.find((p) => p.productId === productId);
     if (existing) {
-      setSelectedProducts(selectedProducts.filter(p => p.productId !== productId))
+      setSelectedProducts(
+        selectedProducts.filter((p) => p.productId !== productId)
+      );
     } else {
-      setSelectedProducts([...selectedProducts, { productId, quantity }])
+      setSelectedProducts([...selectedProducts, { productId, quantity }]);
     }
-  }
+  };
 
   const handleComplete = async () => {
     try {
@@ -78,19 +80,19 @@ function TaskExecution({ task, currentUser, onComplete, onBack }) {
         comments: comments,
         start_video: startVideo,
         end_video: endVideo,
-        status: 'COMPLETED'
-      })
+        status: "COMPLETED",
+      });
 
       // Submit product requests if any
       if (selectedProducts.length > 0) {
-        await api.requestProducts(task.id, selectedProducts)
+        await api.requestProducts(task.id, selectedProducts);
       }
 
-      onComplete()
+      onComplete();
     } catch (error) {
-      console.error('Failed to complete task:', error)
+      console.error("Failed to complete task:", error);
     }
-  }
+  };
 
   return (
     <div className="task-execution">
@@ -98,23 +100,25 @@ function TaskExecution({ task, currentUser, onComplete, onBack }) {
         <button onClick={onBack} className="back-btn">
           ← Back
         </button>
-        <h2>{task.property} - {task.type}</h2>
+        <h2>
+          {task.property} - {task.type}
+        </h2>
         <div className="task-date">
-          {new Date(task.date).toLocaleDateString('es-ES')}
+          {new Date(task.date).toLocaleDateString("es-ES")}
         </div>
       </div>
 
-      {phase === 'start' && (
+      {phase === "start" && (
         <div className="start-phase">
           <h3>Ready to Start?</h3>
           <p>Record a short video showing the initial state of the property.</p>
-          
+
           <div className="video-upload">
             <label>Start Video:</label>
             <input
               type="file"
               accept="video/*"
-              onChange={(e) => handleVideoUpload(e, 'start')}
+              onChange={(e) => handleVideoUpload(e, "start")}
               capture="environment"
             />
             {startVideo && (
@@ -124,7 +128,7 @@ function TaskExecution({ task, currentUser, onComplete, onBack }) {
             )}
           </div>
 
-          <button 
+          <button
             onClick={handleStart}
             disabled={!startVideo}
             className="btn-primary btn-large"
@@ -134,20 +138,24 @@ function TaskExecution({ task, currentUser, onComplete, onBack }) {
         </div>
       )}
 
-      {phase === 'in-progress' && (
+      {phase === "in-progress" && (
         <div className="progress-phase">
           <h3>Cleaning in Progress</h3>
           <div className="timer">
             Started: {new Date(startTime).toLocaleTimeString()}
           </div>
-          
+
           <div className="products-section">
             <h4>Need any products?</h4>
             <div className="products-grid">
-              {products.map(product => (
-                <div 
+              {products.map((product) => (
+                <div
                   key={product.id}
-                  className={`product-item ${selectedProducts.find(p => p.productId === product.id) ? 'selected' : ''}`}
+                  className={`product-item ${
+                    selectedProducts.find((p) => p.productId === product.id)
+                      ? "selected"
+                      : ""
+                  }`}
                   onClick={() => handleProductToggle(product.id)}
                 >
                   {product.name}
@@ -156,19 +164,16 @@ function TaskExecution({ task, currentUser, onComplete, onBack }) {
             </div>
           </div>
 
-          <button 
-            onClick={handleEnd}
-            className="btn-primary btn-large"
-          >
+          <button onClick={handleEnd} className="btn-primary btn-large">
             ✅ Finish Cleaning
           </button>
         </div>
       )}
 
-      {phase === 'end' && (
+      {phase === "end" && (
         <div className="end-phase">
           <h3>Cleaning Complete</h3>
-          
+
           <div className="summary">
             <div>Start: {new Date(startTime).toLocaleTimeString()}</div>
             <div>End: {new Date(endTime).toLocaleTimeString()}</div>
@@ -180,7 +185,7 @@ function TaskExecution({ task, currentUser, onComplete, onBack }) {
             <input
               type="file"
               accept="video/*"
-              onChange={(e) => handleVideoUpload(e, 'end')}
+              onChange={(e) => handleVideoUpload(e, "end")}
               capture="environment"
             />
             {endVideo && (
@@ -204,19 +209,19 @@ function TaskExecution({ task, currentUser, onComplete, onBack }) {
             <div className="selected-products">
               <h4>Products Requested:</h4>
               <ul>
-                {selectedProducts.map(sp => {
-                  const product = products.find(p => p.id === sp.productId)
+                {selectedProducts.map((sp) => {
+                  const product = products.find((p) => p.id === sp.productId);
                   return (
                     <li key={sp.productId}>
                       {product?.name} (Qty: {sp.quantity})
                     </li>
-                  )
+                  );
                 })}
               </ul>
             </div>
           )}
 
-          <button 
+          <button
             onClick={handleComplete}
             disabled={!endVideo}
             className="btn-primary btn-large"
@@ -226,7 +231,7 @@ function TaskExecution({ task, currentUser, onComplete, onBack }) {
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export default TaskExecution
+export default TaskExecution;

@@ -1,69 +1,68 @@
-import { useState, useEffect } from 'react'
-import TaskCard from './TaskCard'
-import TaskExecution from './TaskExecution'
-import api from '../services/api'
+import { useState, useEffect } from "react";
+import TaskCard from "./TaskCard";
+import TaskExecution from "./TaskExecution";
+import api from "../services/api";
 
 function CleanerPanel({ currentUser }) {
-  const [tasks, setTasks] = useState([])
-  const [activeTask, setActiveTask] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState('pending') // 'pending', 'confirmed', 'all'
+  const [tasks, setTasks] = useState([]);
+  const [activeTask, setActiveTask] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("pending"); // 'pending', 'confirmed', 'all'
 
   useEffect(() => {
     if (currentUser) {
-      loadTasks()
+      loadTasks();
     }
-  }, [currentUser])
+  }, [currentUser]);
 
   const loadTasks = async () => {
     try {
-      setLoading(true)
-      const allTasks = await api.getTasks({ cleanerId: currentUser.id })
-      setTasks(allTasks)
+      setLoading(true);
+      const response = await api.getTasks({ cleanerId: currentUser.id });
+      setTasks(response.data);
     } catch (error) {
-      console.error('Failed to load tasks:', error)
+      console.error("Failed to load tasks:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const handleTaskResponse = async (taskId, status, comments = '') => {
+  const handleTaskResponse = async (taskId, status, comments = "") => {
     try {
-      await api.updateTaskStatus(taskId, status, comments)
-      await loadTasks() // Refresh tasks
+      await api.updateTaskStatus(taskId, status, comments);
+      await loadTasks(); // Refresh tasks
     } catch (error) {
-      console.error('Failed to update task:', error)
+      console.error("Failed to update task:", error);
     }
-  }
+  };
 
   const handleStartTask = (task) => {
-    setActiveTask(task)
-  }
+    setActiveTask(task);
+  };
 
   const handleCompleteTask = async () => {
-    await loadTasks() // Refresh tasks
-    setActiveTask(null)
-  }
+    await loadTasks(); // Refresh tasks
+    setActiveTask(null);
+  };
 
-  const filteredTasks = tasks.filter(task => {
-    if (filter === 'pending') return task.status === 'PENDING'
-    if (filter === 'confirmed') return task.status === 'CONFIRMED'
-    return true
-  })
+  const filteredTasks = tasks.filter((task) => {
+    if (filter === "pending") return task.status === "PENDING";
+    if (filter === "confirmed") return task.status === "CONFIRMED";
+    return true;
+  });
 
   if (loading) {
-    return <div className="loading">Loading your tasks...</div>
+    return <div className="loading">Loading your tasks...</div>;
   }
 
   if (activeTask) {
     return (
-      <TaskExecution 
+      <TaskExecution
         task={activeTask}
-        currentUser={currentUser}
         onComplete={handleCompleteTask}
         onBack={() => setActiveTask(null)}
       />
-    )
+    );
   }
 
   return (
@@ -71,21 +70,21 @@ function CleanerPanel({ currentUser }) {
       <div className="panel-header">
         <h2>Your Tasks</h2>
         <div className="task-filters">
-          <button 
-            onClick={() => setFilter('pending')}
-            className={filter === 'pending' ? 'active' : ''}
+          <button
+            onClick={() => setFilter("pending")}
+            className={filter === "pending" ? "active" : ""}
           >
-            Pending ({tasks.filter(t => t.status === 'PENDING').length})
+            Pending ({tasks.filter((t) => t.status === "PENDING").length})
           </button>
-          <button 
-            onClick={() => setFilter('confirmed')}
-            className={filter === 'confirmed' ? 'active' : ''}
+          <button
+            onClick={() => setFilter("confirmed")}
+            className={filter === "confirmed" ? "active" : ""}
           >
-            Confirmed ({tasks.filter(t => t.status === 'CONFIRMED').length})
+            Confirmed ({tasks.filter((t) => t.status === "CONFIRMED").length})
           </button>
-          <button 
-            onClick={() => setFilter('all')}
-            className={filter === 'all' ? 'active' : ''}
+          <button
+            onClick={() => setFilter("all")}
+            className={filter === "all" ? "active" : ""}
           >
             All ({tasks.length})
           </button>
@@ -95,12 +94,14 @@ function CleanerPanel({ currentUser }) {
       <div className="tasks-list">
         {filteredTasks.length === 0 ? (
           <div className="no-tasks">
-            {filter === 'pending' ? 'No pending tasks' : 
-             filter === 'confirmed' ? 'No confirmed tasks' : 
-             'No tasks assigned'}
+            {filter === "pending"
+              ? "No pending tasks"
+              : filter === "confirmed"
+              ? "No confirmed tasks"
+              : "No tasks assigned"}
           </div>
         ) : (
-          filteredTasks.map(task => (
+          filteredTasks.map((task) => (
             <TaskCard
               key={task.id}
               task={task}
@@ -111,7 +112,7 @@ function CleanerPanel({ currentUser }) {
         )}
       </div>
     </div>
-  )
+  );
 }
 
-export default CleanerPanel
+export default CleanerPanel;
