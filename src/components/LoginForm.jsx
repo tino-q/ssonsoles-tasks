@@ -13,13 +13,21 @@ function LoginForm({ onLogin }) {
 
     try {
       const response = await api.getCleaners();
-      const cleaners = response.data;
-      const cleaner = cleaners.find((c) => c.phone === phone && c.active);
 
-      if (cleaner) {
-        onLogin(cleaner);
+      // Check if the response is successful and data is an array
+      if (response.success && Array.isArray(response.data)) {
+        const cleaners = response.data;
+        const cleaner = cleaners.find((c) => c.phone === phone && c.active);
+
+        if (cleaner) {
+          onLogin(cleaner);
+        } else {
+          setError("Phone number not found or inactive");
+        }
       } else {
-        setError("Phone number not found or inactive");
+        // Handle error response or invalid data
+        console.error("Invalid cleaners response:", response);
+        setError(response.data?.error || "Failed to load cleaners data");
       }
     } catch (error) {
       setError("Login failed. Please try again.");

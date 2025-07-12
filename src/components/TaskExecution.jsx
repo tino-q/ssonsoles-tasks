@@ -11,6 +11,7 @@ function TaskExecution({ task, onComplete, onBack }) {
   const [duration, setDuration] = useState("");
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [products, setProducts] = useState([]);
+  const [productsError, setProductsError] = useState("");
 
   useEffect(() => {
     loadProducts();
@@ -27,10 +28,22 @@ function TaskExecution({ task, onComplete, onBack }) {
 
   const loadProducts = async () => {
     try {
+      setProductsError("");
       const response = await api.getProducts();
-      setProducts(response.data);
+
+      // Check if the response is successful and data is an array
+      if (response.success && Array.isArray(response.data)) {
+        setProducts(response.data);
+      } else {
+        // Handle error response or invalid data
+        console.error("Invalid products response:", response);
+        setProductsError(response.data?.error || "Failed to load products");
+        setProducts([]); // Ensure products is always an array
+      }
     } catch (error) {
       console.error("Failed to load products:", error);
+      setProductsError("Failed to load products");
+      setProducts([]); // Ensure products is always an array
     }
   };
 
@@ -94,6 +107,9 @@ function TaskExecution({ task, onComplete, onBack }) {
     }
   };
 
+  // Ensure products is always an array
+  const safeProducts = Array.isArray(products) ? products : [];
+
   return (
     <div className="task-execution">
       <div className="execution-header">
@@ -147,21 +163,28 @@ function TaskExecution({ task, onComplete, onBack }) {
 
           <div className="products-section">
             <h4>Need any products?</h4>
-            <div className="products-grid">
-              {products.map((product) => (
-                <div
-                  key={product.id}
-                  className={`product-item ${
-                    selectedProducts.find((p) => p.productId === product.id)
-                      ? "selected"
-                      : ""
-                  }`}
-                  onClick={() => handleProductToggle(product.id)}
-                >
-                  {product.name}
-                </div>
-              ))}
-            </div>
+            {productsError ? (
+              <div className="error-message">
+                {productsError}
+                <button onClick={loadProducts}>Try Again</button>
+              </div>
+            ) : (
+              <div className="products-grid">
+                {safeProducts.map((product) => (
+                  <div
+                    key={product.id}
+                    className={`product-item ${
+                      selectedProducts.find((p) => p.productId === product.id)
+                        ? "selected"
+                        : ""
+                    }`}
+                    onClick={() => handleProductToggle(product.id)}
+                  >
+                    {product.name}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <button onClick={handleEnd} className="btn-primary btn-large">
@@ -210,7 +233,9 @@ function TaskExecution({ task, onComplete, onBack }) {
               <h4>Products Requested:</h4>
               <ul>
                 {selectedProducts.map((sp) => {
-                  const product = products.find((p) => p.id === sp.productId);
+                  const product = safeProducts.find(
+                    (p) => p.id === sp.productId
+                  );
                   return (
                     <li key={sp.productId}>
                       {product?.name} (Qty: {sp.quantity})

@@ -7,6 +7,7 @@ function CleanerPanel({ currentUser }) {
   const [tasks, setTasks] = useState([]);
   const [activeTask, setActiveTask] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [filter, setFilter] = useState("pending"); // 'pending', 'confirmed', 'all'
 
   useEffect(() => {
@@ -18,10 +19,22 @@ function CleanerPanel({ currentUser }) {
   const loadTasks = async () => {
     try {
       setLoading(true);
+      setError("");
       const response = await api.getTasks({ cleanerId: currentUser.id });
-      setTasks(response.data);
+
+      // Check if the response is successful and data is an array
+      if (response.success && Array.isArray(response.data)) {
+        setTasks(response.data);
+      } else {
+        // Handle error response or invalid data
+        console.error("Invalid tasks response:", response);
+        setError(response.data?.error || "Failed to load tasks");
+        setTasks([]); // Ensure tasks is always an array
+      }
     } catch (error) {
       console.error("Failed to load tasks:", error);
+      setError("Failed to load tasks. Please try again.");
+      setTasks([]); // Ensure tasks is always an array
     } finally {
       setLoading(false);
     }
@@ -33,6 +46,7 @@ function CleanerPanel({ currentUser }) {
       await loadTasks(); // Refresh tasks
     } catch (error) {
       console.error("Failed to update task:", error);
+      setError("Failed to update task. Please try again.");
     }
   };
 
@@ -45,7 +59,9 @@ function CleanerPanel({ currentUser }) {
     setActiveTask(null);
   };
 
-  const filteredTasks = tasks.filter((task) => {
+  // Ensure tasks is always an array before filtering
+  const safeTasks = Array.isArray(tasks) ? tasks : [];
+  const filteredTasks = safeTasks.filter((task) => {
     if (filter === "pending") return task.status === "PENDING";
     if (filter === "confirmed") return task.status === "CONFIRMED";
     return true;
@@ -69,24 +85,26 @@ function CleanerPanel({ currentUser }) {
     <div className="cleaner-panel">
       <div className="panel-header">
         <h2>Your Tasks</h2>
+        {error && <div className="error-message">{error}</div>}
         <div className="task-filters">
           <button
             onClick={() => setFilter("pending")}
             className={filter === "pending" ? "active" : ""}
           >
-            Pending ({tasks.filter((t) => t.status === "PENDING").length})
+            Pending ({safeTasks.filter((t) => t.status === "PENDING").length})
           </button>
           <button
             onClick={() => setFilter("confirmed")}
             className={filter === "confirmed" ? "active" : ""}
           >
-            Confirmed ({tasks.filter((t) => t.status === "CONFIRMED").length})
+            Confirmed (
+            {safeTasks.filter((t) => t.status === "CONFIRMED").length})
           </button>
           <button
             onClick={() => setFilter("all")}
             className={filter === "all" ? "active" : ""}
           >
-            All ({tasks.length})
+            All ({safeTasks.length})
           </button>
         </div>
       </div>
@@ -94,11 +112,18 @@ function CleanerPanel({ currentUser }) {
       <div className="tasks-list">
         {filteredTasks.length === 0 ? (
           <div className="no-tasks">
-            {filter === "pending"
-              ? "No pending tasks"
-              : filter === "confirmed"
-              ? "No confirmed tasks"
-              : "No tasks assigned"}
+            {error ? (
+              <div>
+                <p>Unable to load tasks.</p>
+                <button onClick={loadTasks}>Try Again</button>
+              </div>
+            ) : filter === "pending" ? (
+              "No pending tasks"
+            ) : filter === "confirmed" ? (
+              "No confirmed tasks"
+            ) : (
+              "No tasks assigned"
+            )}
           </div>
         ) : (
           filteredTasks.map((task) => (
