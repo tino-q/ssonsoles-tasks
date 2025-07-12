@@ -1,0 +1,6 @@
+id,name,phone,hourly_rate,active
+1,Maria Rodriguez,+34612345678,15,true
+2,Carmen Lopez,+34623456789,16,true
+3,Ana Garcia,+34634567890,14,true
+4,Sofia Martinez,+34645678901,15,false
+5,Isabel Fernandez,+34656789012,17,true
