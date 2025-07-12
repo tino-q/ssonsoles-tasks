@@ -31,10 +31,20 @@ function doOptions(e) {
 
 function doPost(e) {
   let data;
-  try {
-    data = JSON.parse(e.postData.contents);
-  } catch (error) {
-    return createResponse({ error: "Invalid JSON" }, 400);
+
+  // Try to get data from form parameters first (URLSearchParams)
+  if (e.parameter && Object.keys(e.parameter).length > 1) {
+    // More than just 'action'
+    data = parseFormData(e.parameter);
+  } else if (e.postData && e.postData.contents) {
+    // Fallback to JSON for backward compatibility
+    try {
+      data = JSON.parse(e.postData.contents);
+    } catch (error) {
+      return createResponse({ error: "Invalid JSON" }, 400);
+    }
+  } else {
+    return createResponse({ error: "No data provided" }, 400);
   }
 
   const action = e.parameter.action;
@@ -70,6 +80,45 @@ function doPost(e) {
     console.error("doPost error:", error);
     return createResponse({ error: error.toString() }, 500);
   }
+}
+
+// Helper function to parse form data into nested objects
+function parseFormData(parameters) {
+  const data = {};
+
+  for (const key in parameters) {
+    if (key === "action") continue; // Skip action parameter
+
+    const value = parameters[key];
+
+    if (key.includes(".")) {
+      // Handle nested objects (e.g., "user.name" -> {user: {name: value}})
+      const keys = key.split(".");
+      let current = data;
+
+      for (let i = 0; i < keys.length - 1; i++) {
+        if (!current[keys[i]]) {
+          current[keys[i]] = {};
+        }
+        current = current[keys[i]];
+      }
+
+      current[keys[keys.length - 1]] = value;
+    } else {
+      // Handle arrays and regular values
+      if (value.startsWith("[") && value.endsWith("]")) {
+        try {
+          data[key] = JSON.parse(value);
+        } catch (e) {
+          data[key] = value;
+        }
+      } else {
+        data[key] = value;
+      }
+    }
+  }
+
+  return data;
 }
 
 // Helper function to create JSON response with CORS headers

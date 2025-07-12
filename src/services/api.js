@@ -9,15 +9,16 @@ class ApiService {
 
     const config = {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      // Remove Content-Type header to avoid preflight requests
       ...options,
     };
 
     if (options.data) {
       config.method = "POST";
-      config.body = JSON.stringify(options.data);
+      // Use URLSearchParams for form data instead of JSON
+      const formData = new URLSearchParams();
+      this.flattenObject(options.data, formData);
+      config.body = formData;
     }
 
     try {
@@ -29,6 +30,24 @@ class ApiService {
     } catch (error) {
       console.error("API request failed:", error);
       throw error;
+    }
+  }
+
+  // Helper method to flatten nested objects for form data
+  flattenObject(obj, formData, prefix = "") {
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        const value = obj[key];
+        const formKey = prefix ? `${prefix}.${key}` : key;
+
+        if (value && typeof value === "object" && !Array.isArray(value)) {
+          this.flattenObject(value, formData, formKey);
+        } else if (Array.isArray(value)) {
+          formData.append(formKey, JSON.stringify(value));
+        } else {
+          formData.append(formKey, value);
+        }
+      }
     }
   }
 
