@@ -53,7 +53,29 @@ class ApiService {
 
   // Tasks
   async getTasks(filters = {}) {
-    return this.request("getTasks", { data: filters });
+    // Build query string for GET request
+    const queryParams = new URLSearchParams();
+    queryParams.append("action", "getTasks");
+
+    // Add filters as query parameters
+    Object.keys(filters).forEach((key) => {
+      if (filters[key]) {
+        queryParams.append(key, filters[key]);
+      }
+    });
+
+    const url = `${API_BASE_URL}?${queryParams.toString()}`;
+
+    try {
+      const response = await fetch(url, { method: "GET" });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error("API request failed:", error);
+      throw error;
+    }
   }
 
   async createTask(taskData) {
