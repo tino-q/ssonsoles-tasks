@@ -8,7 +8,7 @@ function CleanerPanel({ currentUser }) {
   const [activeTask, setActiveTask] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [filter, setFilter] = useState("pending"); // 'pending', 'confirmed', 'all'
+  const [filter, setFilter] = useState("pending"); // 'pending', 'completed', 'rejected', 'all'
 
   useEffect(() => {
     if (currentUser) {
@@ -63,7 +63,8 @@ function CleanerPanel({ currentUser }) {
   const safeTasks = Array.isArray(tasks) ? tasks : [];
   const filteredTasks = safeTasks.filter((task) => {
     if (filter === "pending") return task.status === "PENDING";
-    if (filter === "confirmed") return task.status === "CONFIRMED";
+    if (filter === "completed") return task.status === "COMPLETED";
+    if (filter === "rejected") return task.status === "REJECTED";
     return true;
   });
 
@@ -94,11 +95,17 @@ function CleanerPanel({ currentUser }) {
             Pending ({safeTasks.filter((t) => t.status === "PENDING").length})
           </button>
           <button
-            onClick={() => setFilter("confirmed")}
-            className={filter === "confirmed" ? "active" : ""}
+            onClick={() => setFilter("completed")}
+            className={filter === "completed" ? "active" : ""}
           >
-            Confirmed (
-            {safeTasks.filter((t) => t.status === "CONFIRMED").length})
+            Completed (
+            {safeTasks.filter((t) => t.status === "COMPLETED").length})
+          </button>
+          <button
+            onClick={() => setFilter("rejected")}
+            className={filter === "rejected" ? "active" : ""}
+          >
+            Rejected ({safeTasks.filter((t) => t.status === "REJECTED").length})
           </button>
           <button
             onClick={() => setFilter("all")}
@@ -119,8 +126,10 @@ function CleanerPanel({ currentUser }) {
               </div>
             ) : filter === "pending" ? (
               "No pending tasks"
-            ) : filter === "confirmed" ? (
-              "No confirmed tasks"
+            ) : filter === "completed" ? (
+              "No completed tasks"
+            ) : filter === "rejected" ? (
+              "No rejected tasks"
             ) : (
               "No tasks assigned"
             )}

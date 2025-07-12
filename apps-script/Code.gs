@@ -74,7 +74,7 @@ function doPost(e) {
           );
         }
         return createResponse(
-          TaskService.assignTask(data.taskId, data.cleanerId)
+          TaskService.assignTask(data.taskId, data.cleanerId, data.assignedBy)
         );
       case "updateTaskStatus":
         if (!data.taskId || !data.status) {
@@ -84,7 +84,12 @@ function doPost(e) {
           );
         }
         return createResponse(
-          TaskService.updateTaskStatus(data.taskId, data.status, data.comments)
+          TaskService.updateTaskStatus(
+            data.taskId,
+            data.status,
+            data.comments,
+            data.updatedBy
+          )
         );
       case "requestProducts":
         if (!data.taskId || !data.productRequests) {

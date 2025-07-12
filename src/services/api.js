@@ -1,7 +1,7 @@
 // API service for communicating with Google Apps Script backend
 
 const API_BASE_URL =
-  "https://script.google.com/macros/s/AKfycbzdSOXj_1NAp3zkSZjSpZrB2601ckZFCB2uh048mtq_Z6C762IPaAF5iDltsAjCNmj9/exec";
+  "https://script.google.com/macros/s/AKfycbxptsqqEhz2jQVY9kv6HHTP9H7a_Becrft4Uas65jYw5UWuoP6J6Dxje4RaT8hJI84C/exec";
 
 class ApiService {
   async request(endpoint, options = {}) {
