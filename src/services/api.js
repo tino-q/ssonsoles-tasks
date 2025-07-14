@@ -1,7 +1,7 @@
 // API service for communicating with Google Apps Script backend
 
 const API_BASE_URL =
-  "https://script.google.com/macros/s/AKfycbylr4GHy_08_2uC307bTChSasFtZxX7LDJUyvKOULxUGCV8202WjTXDYsD9q26zqptY/exec";
+  "https://script.google.com/macros/s/AKfycbwuyuASLsJ_97uoy0II43SMI0Kci4m3BugRNBpj8ApxdOetZ3qso1S3P1wW2w8eR8lc/exec";
 
 class ApiService {
   async request(endpoint, options = {}) {
@@ -86,6 +86,62 @@ class ApiService {
     return this.request("updateTask", { data: { id: taskId, ...updateData } });
   }
 
+  // Timing Services
+  async logEntry(taskId, userId, timestamp = null) {
+    return this.request("logEntry", {
+      data: { taskId, userId, timestamp },
+      method: "POST"
+    });
+  }
+
+  async logExit(taskId, userId, timestamp = null) {
+    return this.request("logExit", {
+      data: { taskId, userId, timestamp },
+      method: "POST"
+    });
+  }
+
+  async getTaskTimings(taskId) {
+    return this.request("getTaskTimings", {
+      taskId: taskId
+    });
+  }
+
+  // Product Usage Services
+  async logProductUsage(taskId, userId, productId, quantity = 1, notes = "") {
+    return this.request("logProductUsage", {
+      data: { taskId, userId, productId, quantity, notes },
+      method: "POST"
+    });
+  }
+
+  async logMultipleProductUsage(taskId, userId, productUsages) {
+    return this.request("logMultipleProductUsage", {
+      data: { taskId, userId, productUsages },
+      method: "POST"
+    });
+  }
+
+  async getTaskProductUsage(taskId) {
+    return this.request("getTaskProductUsage", {
+      taskId: taskId
+    });
+  }
+
+  // Comment Services
+  async addComment(taskId, userId, comment, commentType = "GENERAL") {
+    return this.request("addComment", {
+      data: { taskId, userId, comment, commentType },
+      method: "POST"
+    });
+  }
+
+  async getComments(taskId) {
+    return this.request("getComments", {
+      data: { taskId }
+    });
+  }
+
   async assignTask(taskId, cleanerId) {
     return this.request("assignTask", { data: { taskId, cleanerId } });
   }
@@ -98,6 +154,20 @@ class ApiService {
   async updateTaskStatus(taskId, status, comments = "") {
     return this.request("updateTaskStatus", {
       data: { taskId, status, comments },
+    });
+  }
+
+  // Rejections
+  async logRejection(taskId, userId, rejectionReason) {
+    return this.request("logRejection", {
+      data: { taskId, userId, rejectionReason },
+    });
+  }
+
+  // Proposals
+  async createProposal(taskId, userId, proposedTime, proposalReason) {
+    return this.request("createProposal", {
+      data: { taskId, userId, proposedTime, proposalReason },
     });
   }
 

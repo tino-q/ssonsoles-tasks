@@ -1,11 +1,3 @@
 id,name,category,min_stock
-1,All-purpose cleaner,cleaning,5
-2,Glass cleaner,cleaning,3
-3,Toilet paper,bathroom,20
-4,Towels,linens,10
-5,Bed sheets,linens,15
-6,Vacuum bags,equipment,5
-7,Trash bags,supplies,50
-8,Dishwasher tablets,kitchen,10
-9,Laundry detergent,laundry,3
-10,Floor mop,equipment,2
+1,Detergente multiusos,cleaning,5
+2,Papel higiénico,supplies,20

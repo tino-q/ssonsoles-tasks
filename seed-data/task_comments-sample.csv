@@ -1,0 +1,3 @@
+id,task_id,user_id,comment,timestamp,comment_type
+comment_1721000000_abc,task_1721000000_abc123,system,Checkout estándar,2024-07-14T10:00:00Z,INITIAL
+comment_1721000001_def,task_1721000001_def456,1,Perfecto horario,2024-07-14T12:00:00Z,GENERAL

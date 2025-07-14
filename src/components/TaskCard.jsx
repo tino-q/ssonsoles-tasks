@@ -1,21 +1,27 @@
 import { useState } from "react";
+import { useTranslation } from 'react-i18next';
+import TaskCommentsSection from "./TaskCommentsSection";
+import { useApiRequest } from "../hooks/useApiRequest";
 
-function TaskCard({ task, onResponse, onStart }) {
+function TaskCard({ task, onResponse, onStart, currentUser }) {
   const [showResponse, setShowResponse] = useState(false);
   const [comments, setComments] = useState("");
   const [suggestedTime, setSuggestedTime] = useState("");
+  const [showComments, setShowComments] = useState(false);
+  const { executeRequest } = useApiRequest();
+  const { t } = useTranslation();
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "URGENT":
+      case "URGENTE":
         return "#ff4444";
-      case "ASSIGNED":
+      case "ESP_OK":
         return "#ffaa00";
-      case "CONFIRMED":
+      case "CONFIR":
         return "#00aa00";
       case "REJECTED":
         return "#ff8800";
-      case "TENTATIVE":
+      case "TENTATIVO":
         return "#0088ff";
       default:
         return "#666666";
@@ -24,45 +30,72 @@ function TaskCard({ task, onResponse, onStart }) {
 
   const getStatusText = (status) => {
     switch (status) {
-      case "URGENT":
-        return "Urgent - Not Assigned";
-      case "ASSIGNED":
-        return "Assigned - Awaiting Response";
-      case "CONFIRMED":
-        return "Confirmed";
+      case "URGENTE":
+        return t('status.urgente');
+      case "ESP_OK":
+        return t('status.espOk');
+      case "CONFIR":
+        return t('status.confir');
       case "REJECTED":
-        return "Rejected";
-      case "TENTATIVE":
-        return "Alternative Time Proposed";
+        return t('status.rejected');
+      case "TENTATIVO":
+        return t('status.tentativo');
       default:
         return status;
     }
   };
 
   const handleConfirm = () => {
-    onResponse(task.id, "CONFIRMED", comments);
+    onResponse(task.id, "CONFIR", comments);
     setShowResponse(false);
     setComments("");
   };
 
-  const handleReject = () => {
-    onResponse(task.id, "REJECTED", comments);
+  const handleReject = async () => {
+    try {
+      // Import api here to avoid circular dependency
+      const api = (await import('../services/api')).default;
+      
+      // Log rejection using the specific API
+      await executeRequest(
+        () => api.logRejection(task.id, currentUser.id, comments || t('response.rejected')),
+        "loading.rejecting"
+      );
+      
+      // Refresh parent component
+      onResponse(task.id, "REJECTED", "");
+    } catch (error) {
+      console.error("Error logging rejection:", error);
+    }
+    
     setShowResponse(false);
     setComments("");
   };
 
-  const handleTentative = () => {
-    const tentativeComments = `Alternative time suggested: ${suggestedTime}${
-      comments ? ". " + comments : ""
-    }`;
-    onResponse(task.id, "TENTATIVE", tentativeComments);
+  const handleTentative = async () => {
+    try {
+      // Import api here to avoid circular dependency
+      const api = (await import('../services/api')).default;
+      
+      // Create a proposal using the specific API
+      await executeRequest(
+        () => api.createProposal(task.id, currentUser.id, suggestedTime, comments || t('response.alternativeTime')),
+        "loading.creating"
+      );
+      
+      // Refresh parent component
+      onResponse(task.id, "TENTATIVO", "");
+    } catch (error) {
+      console.error("Error creating proposal:", error);
+    }
+    
     setShowResponse(false);
     setComments("");
     setSuggestedTime("");
   };
 
-  const canStart = task.status === "CONFIRMED";
-  const needsResponse = task.status === "ASSIGNED";
+  const canStart = task.status === "CONFIR";
+  const needsResponse = task.status === "ESP_OK";
 
   return (
     <div
@@ -83,7 +116,7 @@ function TaskCard({ task, onResponse, onStart }) {
         <div className="task-date">
           📅 {new Date(task.date).toLocaleDateString("es-ES")}
         </div>
-        <div className="task-type">🧹 {task.type || "Cleaning"}</div>
+        <div className="task-type">🧹 {task.type || t('task.type.cleaning')}</div>
         {task.notes && <div className="task-notes">📝 {task.notes}</div>}
       </div>
 
@@ -95,22 +128,22 @@ function TaskCard({ task, onResponse, onStart }) {
                 onClick={() => setShowResponse(true)}
                 className="btn-primary"
               >
-                Respond to Task
+                {t('task.respond')}
               </button>
             ) : (
               <div className="response-form">
                 <div className="form-group">
-                  <label>Comments (optional):</label>
+                  <label>{t('response.comments')}</label>
                   <textarea
                     value={comments}
                     onChange={(e) => setComments(e.target.value)}
-                    placeholder="Any additional comments..."
+                    placeholder={t('response.commentsPlaceholder')}
                     rows="2"
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>Suggest alternative time (optional):</label>
+                  <label>{t('response.suggestTime')}</label>
                   <input
                     type="time"
                     value={suggestedTime}
@@ -120,21 +153,21 @@ function TaskCard({ task, onResponse, onStart }) {
 
                 <div className="response-buttons">
                   <button onClick={handleConfirm} className="btn-confirm">
-                    ✅ Confirm
+                    {t('task.confirm')}
                   </button>
                   <button onClick={handleReject} className="btn-reject">
-                    ❌ Reject
+                    {t('task.reject')}
                   </button>
                   {suggestedTime && (
                     <button onClick={handleTentative} className="btn-tentative">
-                      🕒 Propose Time
+                      {t('task.propose')}
                     </button>
                   )}
                   <button
                     onClick={() => setShowResponse(false)}
                     className="btn-cancel"
                   >
-                    Cancel
+                    {t('task.cancel')}
                   </button>
                 </div>
               </div>
@@ -144,10 +177,17 @@ function TaskCard({ task, onResponse, onStart }) {
 
         {canStart && (
           <button onClick={() => onStart(task)} className="btn-start">
-            📋 Begin Task
+            {t('task.begin')}
           </button>
         )}
       </div>
+
+      <TaskCommentsSection
+        taskId={task.id}
+        currentUser={currentUser}
+        isExpanded={showComments}
+        onToggle={() => setShowComments(!showComments)}
+      />
     </div>
   );
 }

@@ -1,26 +1,32 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from 'react-i18next';
 import TaskCard from "./TaskCard";
 import TaskExecution from "./TaskExecution";
 import api from "../services/api";
+import { useApiRequest } from "../hooks/useApiRequest";
 
 function CleanerPanel({ currentUser }) {
   const [tasks, setTasks] = useState([]);
   const [activeTask, setActiveTask] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
+  const { executeRequest } = useApiRequest();
+  const { t } = useTranslation();
 
   useEffect(() => {
-    if (currentUser) {
+    if (currentUser && currentUser.id) {
       loadTasks();
     }
-  }, [currentUser]);
+  }, [currentUser?.id]); // Solo reaccionar a cambios de ID, no a cambios de lastActivity
 
   const loadTasks = async () => {
     try {
       setLoading(true);
       setError("");
-      const response = await api.getTasks({ cleanerId: currentUser.id });
+      const response = await executeRequest(
+        () => api.getTasks({ cleanerId: currentUser.id }),
+        "loading.tasks"
+      );
 
       // Console log the response for debugging
       console.log("Tasks API Response:", response);
@@ -33,12 +39,12 @@ function CleanerPanel({ currentUser }) {
       } else {
         // Handle error response or invalid data
         console.error("Invalid tasks response:", response);
-        setError(response.data?.error || "Failed to load tasks");
+        setError(response.data?.error || t('tasks.error.load'));
         setTasks([]); // Ensure tasks is always an array
       }
     } catch (error) {
       console.error("Failed to load tasks:", error);
-      setError("Failed to load tasks. Please try again.");
+      setError(t('tasks.error.load'));
       setTasks([]); // Ensure tasks is always an array
     } finally {
       setLoading(false);
@@ -47,33 +53,36 @@ function CleanerPanel({ currentUser }) {
 
   const handleRefresh = async () => {
     try {
-      setRefreshing(true);
       setError("");
-      const response = await api.getTasks({ cleanerId: currentUser.id });
+      const response = await executeRequest(
+        () => api.getTasks({ cleanerId: currentUser.id }),
+        "loading.refreshing"
+      );
 
       if (response.success && Array.isArray(response.data)) {
         setTasks(response.data);
       } else {
         console.error("Invalid tasks response:", response);
-        setError(response.data?.error || "Failed to refresh tasks");
+        setError(response.data?.error || t('tasks.error.refresh'));
         setTasks([]);
       }
     } catch (error) {
       console.error("Failed to refresh tasks:", error);
-      setError("Failed to refresh tasks. Please try again.");
+      setError(t('tasks.error.refresh'));
       setTasks([]);
-    } finally {
-      setRefreshing(false);
     }
   };
 
   const handleTaskResponse = async (taskId, status, comments = "") => {
     try {
-      await api.updateTaskStatus(taskId, status, comments);
+      await executeRequest(
+        () => api.updateTaskStatus(taskId, status, comments),
+        "loading.updateTask"
+      );
       await loadTasks(); // Refresh tasks
     } catch (error) {
       console.error("Failed to update task:", error);
-      setError("Failed to update task. Please try again.");
+      setError(t('tasks.error.update'));
     }
   };
 
@@ -90,7 +99,7 @@ function CleanerPanel({ currentUser }) {
   const safeTasks = Array.isArray(tasks) ? tasks : [];
 
   if (loading) {
-    return <div className="loading">Loading your tasks...</div>;
+    return <div className="loading">{t('loading.tasks')}</div>;
   }
 
   if (activeTask) {
@@ -99,6 +108,7 @@ function CleanerPanel({ currentUser }) {
         task={activeTask}
         onComplete={handleCompleteTask}
         onBack={() => setActiveTask(null)}
+        currentUser={currentUser}
       />
     );
   }
@@ -107,19 +117,18 @@ function CleanerPanel({ currentUser }) {
     <div className="cleaner-panel">
       <div className="panel-header">
         <div className="header-title">
-          <h2>Your Tasks</h2>
+          <h2>{t('tasks.title')}</h2>
           <button
             onClick={handleRefresh}
             className="refresh-btn"
-            disabled={refreshing}
-            title="Refresh tasks"
+            title={t('common.refresh')}
           >
-            {refreshing ? "🔄" : "↻"}
+            ↻
           </button>
         </div>
         {error && <div className="error-message">{error}</div>}
         <div className="task-filters">
-          <button className="active">All ({safeTasks.length})</button>
+          <button className="active">{t('tasks.all', { count: safeTasks.length })}</button>
         </div>
       </div>
 
@@ -128,11 +137,11 @@ function CleanerPanel({ currentUser }) {
           <div className="no-tasks">
             {error ? (
               <div>
-                <p>Unable to load tasks.</p>
-                <button onClick={loadTasks}>Try Again</button>
+                <p>{t('tasks.unableToLoad')}</p>
+                <button onClick={loadTasks}>{t('tasks.tryAgain')}</button>
               </div>
             ) : (
-              "No tasks assigned"
+              t('tasks.noTasks')
             )}
           </div>
         ) : (
@@ -142,6 +151,7 @@ function CleanerPanel({ currentUser }) {
               task={task}
               onResponse={handleTaskResponse}
               onStart={handleStartTask}
+              currentUser={currentUser}
             />
           ))
         )}

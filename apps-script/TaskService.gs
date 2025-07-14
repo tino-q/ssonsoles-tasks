@@ -1,6 +1,28 @@
 // Task Service - Handles all task-related operations
 
 const TaskService = {
+  // Get single task by ID
+  getTaskById: function(taskId) {
+    const sheet = getSheet("tasks");
+    if (!sheet) throw new Error("Tasks sheet not found");
+
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    const rows = data.slice(1);
+
+    const task = rows
+      .map((row) => {
+        const taskObj = {};
+        headers.forEach((header, index) => {
+          taskObj[header] = row[index];
+        });
+        return taskObj;
+      })
+      .find((task) => task.id === taskId);
+
+    return task || null;
+  },
+
   // Get tasks with optional filters
   getTasks: function (filters = {}) {
     const sheet = getSheet("tasks");
@@ -59,15 +81,8 @@ const TaskService = {
       property: taskData.property,
       type: taskData.type || "cleaning",
       date: taskData.date,
-      status: "URGENT", // New tasks start as URGENT (unassigned)
+      status: "URGENTE", // New tasks start as URGENTE (unassigned)
       assigned_cleaner_id: "",
-      notes: taskData.notes || "",
-      comments: "",
-      start_time: "",
-      end_time: "",
-      start_video: "",
-      end_video: "",
-      products_used: "[]", // Initialize as empty JSON array
       created_at: timestamp,
       updated_at: timestamp,
       created_by: taskData.created_by || "admin", // Should be passed from caller
@@ -81,6 +96,23 @@ const TaskService = {
     const values = headers.map((header) => newTask[header] || "");
 
     sheet.appendRow(values);
+
+    // Capturar snapshot inicial
+    try {
+      EventService.captureSnapshot(id, taskData.created_by || "system");
+    } catch (error) {
+      console.error("Error capturing initial snapshot:", error);
+      // No fallar por error de snapshot
+    }
+
+    // Agregar comentario inicial si se proporcionó
+    if (taskData.notes) {
+      try {
+        CommentService.addComment(id, taskData.created_by || "system", taskData.notes, "INITIAL");
+      } catch (error) {
+        console.error("Error adding initial comment:", error);
+      }
+    }
 
     return newTask;
   },
@@ -126,6 +158,14 @@ const TaskService = {
       }
     });
 
+    // Capturar snapshot después de actualización
+    try {
+      EventService.captureSnapshot(updateData.id, finalUpdateData.last_updated_by || "system");
+    } catch (error) {
+      console.error("Error capturing update snapshot:", error);
+      // No fallar por error de snapshot
+    }
+
     return { success: true, updated: finalUpdateData };
   },
 
@@ -134,7 +174,7 @@ const TaskService = {
     const updateData = {
       id: taskId,
       assigned_cleaner_id: cleanerId,
-      status: "ASSIGNED", // Task moves to ASSIGNED when assigned
+      status: "ESP_OK", // Task moves to ESP_OK when assigned (as per requirements)
       last_updated_by: assignedBy,
     };
 

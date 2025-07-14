@@ -1,17 +1,17 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
+import { useApiRequest } from "../hooks/useApiRequest";
 
-function TaskExecution({ task, onComplete, onBack }) {
+function TaskExecution({ task, onComplete, onBack, currentUser }) {
   const [phase, setPhase] = useState("start"); // 'start', 'in-progress', 'end'
   const [startTime, setStartTime] = useState(null);
   const [endTime, setEndTime] = useState(null);
-  const [startVideo, setStartVideo] = useState(null);
-  const [endVideo, setEndVideo] = useState(null);
   const [comments, setComments] = useState("");
   const [duration, setDuration] = useState("");
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [products, setProducts] = useState([]);
   const [productsError, setProductsError] = useState("");
+  const { executeRequest } = useApiRequest();
 
   useEffect(() => {
     loadProducts();
@@ -29,7 +29,10 @@ function TaskExecution({ task, onComplete, onBack }) {
   const loadProducts = async () => {
     try {
       setProductsError("");
-      const response = await api.getProducts();
+      const response = await executeRequest(
+        () => api.getProducts(),
+        "Cargando productos..."
+      );
 
       // Check if the response is successful and data is an array
       if (response.success && Array.isArray(response.data)) {
@@ -47,29 +50,35 @@ function TaskExecution({ task, onComplete, onBack }) {
     }
   };
 
-  const handleStart = () => {
+  const handleStart = async () => {
     const now = new Date().toISOString();
     setStartTime(now);
     setPhase("in-progress");
+    
+    // Log entry using TimingService
+    try {
+      await executeRequest(
+        () => api.logEntry(task.id, currentUser.id, now),
+        "Iniciando tarea..."
+      );
+    } catch (error) {
+      console.error("Error logging entry:", error);
+    }
   };
 
-  const handleEnd = () => {
+  const handleEnd = async () => {
     const now = new Date().toISOString();
     setEndTime(now);
     setPhase("end");
-  };
-
-  const handleVideoUpload = (e, type) => {
-    const file = e.target.files[0];
-    if (file) {
-      // In a real app, you'd upload to cloud storage
-      // For now, we'll just store the file reference
-      const videoUrl = URL.createObjectURL(file);
-      if (type === "start") {
-        setStartVideo(videoUrl);
-      } else {
-        setEndVideo(videoUrl);
-      }
+    
+    // Log exit using TimingService
+    try {
+      await executeRequest(
+        () => api.logExit(task.id, currentUser.id, now),
+        "Finalizando tarea..."
+      );
+    } catch (error) {
+      console.error("Error logging exit:", error);
     }
   };
 
@@ -86,19 +95,26 @@ function TaskExecution({ task, onComplete, onBack }) {
 
   const handleComplete = async () => {
     try {
-      // Update task with execution data
-      await api.updateTask(task.id, {
-        start_time: startTime,
-        end_time: endTime,
-        comments: comments,
-        start_video: startVideo,
-        end_video: endVideo,
-        status: "COMPLETED",
-      });
+      // Update task status to COMPLETED
+      await executeRequest(
+        () => api.updateTaskStatus(task.id, "COMPLETED", comments),
+        "Completando tarea..."
+      );
 
-      // Submit product requests if any
+      // Add final comments if any
+      if (comments) {
+        await executeRequest(
+          () => api.addComment(task.id, currentUser.id, comments, "COMPLETION"),
+          "Guardando comentarios..."
+        );
+      }
+
+      // Log product usage if any
       if (selectedProducts.length > 0) {
-        await api.requestProducts(task.id, selectedProducts);
+        await executeRequest(
+          () => api.logMultipleProductUsage(task.id, currentUser.id, selectedProducts),
+          "Registrando uso de productos..."
+        );
       }
 
       onComplete();
@@ -127,26 +143,10 @@ function TaskExecution({ task, onComplete, onBack }) {
       {phase === "start" && (
         <div className="start-phase">
           <h3>Ready to Start?</h3>
-          <p>Record a short video showing the initial state of the property.</p>
-
-          <div className="video-upload">
-            <label>Start Video:</label>
-            <input
-              type="file"
-              accept="video/*"
-              onChange={(e) => handleVideoUpload(e, "start")}
-              capture="environment"
-            />
-            {startVideo && (
-              <video width="200" controls>
-                <source src={startVideo} type="video/mp4" />
-              </video>
-            )}
-          </div>
+          <p>Click the button when you're ready to begin cleaning.</p>
 
           <button
             onClick={handleStart}
-            disabled={!startVideo}
             className="btn-primary btn-large"
           >
             🚀 Start Cleaning
@@ -203,21 +203,6 @@ function TaskExecution({ task, onComplete, onBack }) {
             <div>Duration: {duration}</div>
           </div>
 
-          <div className="video-upload">
-            <label>End Video:</label>
-            <input
-              type="file"
-              accept="video/*"
-              onChange={(e) => handleVideoUpload(e, "end")}
-              capture="environment"
-            />
-            {endVideo && (
-              <video width="200" controls>
-                <source src={endVideo} type="video/mp4" />
-              </video>
-            )}
-          </div>
-
           <div className="comments-section">
             <label>Comments:</label>
             <textarea
@@ -230,7 +215,7 @@ function TaskExecution({ task, onComplete, onBack }) {
 
           {selectedProducts.length > 0 && (
             <div className="selected-products">
-              <h4>Products Requested:</h4>
+              <h4>Products Used:</h4>
               <ul>
                 {selectedProducts.map((sp) => {
                   const product = safeProducts.find(
@@ -248,10 +233,9 @@ function TaskExecution({ task, onComplete, onBack }) {
 
           <button
             onClick={handleComplete}
-            disabled={!endVideo}
             className="btn-primary btn-large"
           >
-            📋 Submit Report
+            📋 Complete Task
           </button>
         </div>
       )}

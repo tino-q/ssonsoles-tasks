@@ -1,44 +1,77 @@
-import { useState } from "react";
+import { useEffect } from "react";
+import { useTranslation } from 'react-i18next';
 import CleanerPanel from "./components/CleanerPanel";
 import LoginForm from "./components/LoginForm";
+import GlobalSpinner from "./components/GlobalSpinner";
+import LanguageSelector from "./components/LanguageSelector";
+import SessionNotification from "./components/SessionNotification";
+import SessionDebugInfo from "./components/SessionDebugInfo";
+import { LoadingProvider } from "./context/LoadingContext";
+import useAuth from "./hooks/useAuth";
 import "./App.css";
 
 function App() {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { user, isLoggedIn, login, logout, updateLastActivity, getSessionInfo } = useAuth();
+  const { t } = useTranslation();
 
-  const handleLogin = (cleanerData) => {
-    setCurrentUser(cleanerData);
-    setIsLoggedIn(true);
-  };
+  // Actualizar última actividad en cada interacción (throttled)
+  useEffect(() => {
+    let lastActivityUpdate = 0;
+    
+    const handleUserActivity = () => {
+      const now = Date.now();
+      // Throttle: solo ejecutar updateLastActivity una vez por minuto
+      if (now - lastActivityUpdate > 60000) {
+        lastActivityUpdate = now;
+        updateLastActivity();
+      }
+    };
 
-  const handleLogout = () => {
-    setCurrentUser(null);
-    setIsLoggedIn(false);
-  };
+    // Escuchar solo eventos significativos de actividad del usuario
+    const events = ['click', 'keydown', 'scroll'];
+    
+    events.forEach(event => {
+      document.addEventListener(event, handleUserActivity, true);
+    });
+
+    return () => {
+      events.forEach(event => {
+        document.removeEventListener(event, handleUserActivity, true);
+      });
+    };
+  }, [updateLastActivity]);
 
   return (
-    <div className="App">
-      <header className="app-header">
-        <h1>Cleaning Tasks!!!</h1>
-        {isLoggedIn && (
-          <div className="user-info">
-            <span>Welcome, {currentUser?.name}</span>
-            <button onClick={handleLogout} className="logout-btn">
-              Logout
-            </button>
+    <LoadingProvider>
+      <div className="App">
+        <header className="app-header">
+          <div className="header-top">
+            <h1>{t('app.title')}</h1>
+            <LanguageSelector />
           </div>
-        )}
-      </header>
+          {isLoggedIn && (
+            <div className="user-info">
+              <span>{t('app.welcome', { name: user?.name })}</span>
+              <button onClick={logout} className="logout-btn">
+                {t('app.logout')}
+              </button>
+            </div>
+          )}
+        </header>
 
-      <main className="app-main">
-        {!isLoggedIn ? (
-          <LoginForm onLogin={handleLogin} />
-        ) : (
-          <CleanerPanel currentUser={currentUser} />
-        )}
-      </main>
-    </div>
+        <main className="app-main">
+          {!isLoggedIn ? (
+            <LoginForm onLogin={login} />
+          ) : (
+            <CleanerPanel currentUser={user} />
+          )}
+        </main>
+        
+        <GlobalSpinner />
+        <SessionNotification user={user} />
+        <SessionDebugInfo user={user} getSessionInfo={getSessionInfo} />
+      </div>
+    </LoadingProvider>
   );
 }
 

@@ -1,11 +1,3 @@
 property,checkin_date,checkout_date,notes
-QDCHA,2024-01-15,2024-01-18,Standard checkout
-PISO2,2024-01-16,2024-01-19,Late checkout requested
-STUDIO,2024-01-17,2024-01-20,Deep clean needed
-QDCHA,2024-01-20,2024-01-23,Early checkin
-LOFT,2024-01-22,2024-01-25,
-PISO2,2024-01-24,2024-01-27,Maintenance required
-STUDIO,2024-01-26,2024-01-29,Check balcony door
-QDCHA,2024-01-28,2024-01-31,
-LOFT,2024-01-30,2024-02-02,Deep clean needed
-PISO2,2024-02-01,2024-02-04,
+QDCHA,2024-07-15,2024-07-17,Checkout estándar
+ALMENDRO,2024-07-16,2024-07-18,Revisar persiana rota

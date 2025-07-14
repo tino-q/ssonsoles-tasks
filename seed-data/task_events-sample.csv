@@ -1,0 +1,4 @@
+snapshot_id,task_id,property,type,date,status,assigned_cleaner_id,created_at,updated_at,created_by,last_updated_by,snapshot_timestamp,changed_by
+snap_1721000000_abc,task_1721000000_abc123,Villa Moderna,cleaning,2024-07-17,URGENTE,,2024-07-14T10:00:00Z,2024-07-14T10:00:00Z,admin,admin,2024-07-14T10:00:00Z,admin
+snap_1721000001_def,task_1721000001_def456,Villa Moderna,cleaning,2024-07-18,ESP_OK,1,2024-07-14T10:30:00Z,2024-07-15T09:00:00Z,admin,user_1,2024-07-15T09:00:00Z,admin
+snap_1721000002_ghi,task_1721000001_def456,Villa Moderna,cleaning,2024-07-18,CONFIR,1,2024-07-14T10:30:00Z,2024-07-15T09:30:00Z,admin,user_1,2024-07-15T09:30:00Z,user_1

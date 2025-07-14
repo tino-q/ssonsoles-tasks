@@ -1,0 +1,2 @@
+id,task_id,user_id,rejection_reason,timestamp,previous_cleaner_id
+rejection_1721000000_abc,task_1721000000_abc123,2,No disponible esa fecha,2024-07-14T14:00:00Z,

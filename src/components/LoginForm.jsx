@@ -1,18 +1,23 @@
 import { useState } from "react";
+import { useTranslation } from 'react-i18next';
 import api from "../services/api";
+import { useApiRequest } from "../hooks/useApiRequest";
 
 function LoginForm({ onLogin }) {
   const [phone, setPhone] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { executeRequest } = useApiRequest();
+  const { t } = useTranslation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
 
     try {
-      const response = await api.getCleaners();
+      const response = await executeRequest(
+        () => api.getCleaners(),
+        "loading.credentials"
+      );
 
       // Check if the response is successful and data is an array
       if (response.success && Array.isArray(response.data)) {
@@ -22,27 +27,25 @@ function LoginForm({ onLogin }) {
         if (cleaner) {
           onLogin(cleaner);
         } else {
-          setError("Phone number not found or inactive");
+          setError(t('login.error.notFound'));
         }
       } else {
         // Handle error response or invalid data
         console.error("Invalid cleaners response:", response);
-        setError(response.data?.error || "Failed to load cleaners data");
+        setError(response.data?.error || t('login.error.loadCleaners'));
       }
     } catch (error) {
-      setError("Login failed. Please try again.");
+      setError(t('login.error.failed'));
       console.error("Login error:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
     <div className="login-form">
-      <h2>Cleaner Login</h2>
+      <h2>{t('login.title')}</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="phone">Phone Number:</label>
+          <label htmlFor="phone">{t('login.phone')}</label>
           <input
             type="tel"
             id="phone"
@@ -55,8 +58,8 @@ function LoginForm({ onLogin }) {
 
         {error && <div className="error-message">{error}</div>}
 
-        <button type="submit" disabled={loading || !phone}>
-          {loading ? "Logging in..." : "Login"}
+        <button type="submit" disabled={!phone}>
+          {t('login.button')}
         </button>
       </form>
     </div>

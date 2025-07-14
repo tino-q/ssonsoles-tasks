@@ -1,0 +1,2 @@
+id,task_id,user_id,proposed_time,proposal_reason,timestamp,status
+proposal_1721000000_abc,task_1721000000_abc123,1,2024-07-17T16:00:00Z,Mejor por la tarde,2024-07-14T13:00:00Z,PENDING
